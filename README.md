@@ -11,9 +11,30 @@ or [logstash](http://logstash.net/) using [logstash-gelf](http://logging.paluch.
 Usage
 -----
 
+The [gini/dropwizard-gelf](https://github.com/gini/dropwizard-gelf) project only supports Dropwizard version `1.13`. We're running version `2.0`, so I forked the project here. All that was needed to make it compatible with our version of Dropwizard was to update the version string of the Dropwizard dependency in the `pom.xml` to the correct version, and re-package the JAR (`mvn package`). This produces `target/dropwizard-gelf-2.0.jar`, which needs to be copied to the `lib` directly of the Admin Pont deployment. You'll also need to drop in [logstash-gelf-1.14.0.jar](https://repo1.maven.org/maven2/biz/paluch/logging/logstash-gelf/1.14.0/logstash-gelf-1.14.0.jar), on which `dropwizard-gelf` depends.
+
+Then, add a GELF appender to the configuration:
+
+```yaml
+  appenders:
+    - type: gelf
+      enabled: true
+      host: tcp:10.0.100.64
+      port: 514
+      facility: AdminPoint
+      threshold: ALL
+      extractStackTrace: true
+      mdcProfiling: true
+      includeFullMDC: true
+      includeLocation: true
+```
+
+**Note:** This configuration points to a Graylog server instance running on AWS at `10.0.100.64`. The Graylog instance is inside the VPC, so your Admin Point needs to be running on a machine inside the VPC or connected to the VPN. To push messages to another server, you'll need to update the `host` and `port` settings accordingly. You can access the shared Graylog server via its web UI at http://10.0.100.64:9000. See 1Password for the login details.
+
 The Dropwizard GELF provides an `AppenderFactory` which is automatically registered in Dropwizard and will send log
 messages directly to your configured GELF-enabled server.
 
+See below for further instructions.
 
 Logging startup errors to Graylog
 ---------------------------------
